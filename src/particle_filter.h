@@ -11,20 +11,11 @@
 
 #include "helper_functions.h"
 #include "particle.h"
+#include <random>
 
 class ParticleFilter
 {
-    
-    // Number of particles to draw
-    unsigned num_particles;
-    
-    // Flag, if filter is initialized
-    bool is_initialized;
-    
 public:
-    
-    // Set of current particles
-    std::vector<Particle> particles;
     
     // Constructor
     // @param M Number of particles
@@ -97,6 +88,31 @@ public:
     {
         return is_initialized;
     }
+    
+    /**
+     * Return reference to list of particles
+     */
+    const std::vector<Particle>& getParticles() const
+    {
+        return particles;
+    }
+    
+private:
+    
+    // Number of particles to draw
+    unsigned num_particles;
+    
+    // Flag, if filter is initialized
+    bool is_initialized;
+    
+    // Set of current particles
+    std::vector<Particle> particles;
+    
+    // Vector of weights of all particles
+    std::vector<double> weights;
+    
+    // Create random number generator
+    std::default_random_engine gen;
 };
 
 
