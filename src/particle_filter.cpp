@@ -5,11 +5,6 @@
  *      Author: Tiffany Huang
  */
 
-
-#include <algorithm>
-#include <iostream>
-#include <numeric>
-
 #include "particle_filter.h"
 
 using namespace std;
@@ -17,9 +12,9 @@ using namespace std;
 void ParticleFilter::init(double x, double y, double theta, double std[])
 {
     // Set number of particles
-    num_particles = 1000U;
+    num_particles = 100U;
     
-    // Create normal distributions for around x, y and psi.
+    // Create normal distributions around x, y and psi
     const double std_x = std[0];
     const double std_y = std[1];
     const double std_psi = std[2];
@@ -138,41 +133,55 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // Clear weights vector
     weights.clear();
     
+    // Extract elements from landmark standard deviation array and pre-calc
+    const double std_x = std_landmark[0];
+    const double std_y = std_landmark[1];
+    const double std_xy = std_x * std_y;
+    const double exp2 = sqrt(2.0 * M_PI * std_xy);
+    
     for (Particle& particle : particles)
     {
         // Create vector of landmarks in particles sensor range
         std::vector<LandmarkObs> predicted_landmarks;
         for(const Map::single_landmark_s landmark : map_landmarks.landmark_list)
         {
-            const double delta_x = (landmark.x_f - particle.x);
-            const double delta_y = (landmark.y_f - particle.y);
-            
+            // Calculate distance between particle and landmark
             const double d = dist(particle.x, particle.y, landmark.x_f, landmark.y_f);
             
+            // Check if distance in within sensor range
             if (d <= sensor_range)
             {
-                const double new_x = delta_x * cos(particle.theta) + delta_y * sin(particle.theta);
-                const double new_y = delta_y * cos(particle.theta) - delta_x * sin(particle.theta);
+                // Pre-calculate position vector
+                const double delta_x = (landmark.x_f - particle.x);
+                const double delta_y = (landmark.y_f - particle.y);
                 
-                LandmarkObs l = {landmark.id_i, new_x, new_y};
+                // Store observations in landmark struct
+                LandmarkObs l;
+                l.id = landmark.id_i;
+                l.x = delta_x * cos(particle.theta) + delta_y * sin(particle.theta);
+                l.y = delta_y * cos(particle.theta) - delta_x * sin(particle.theta);
+                
                 predicted_landmarks.push_back(l);
             }
         }
 
         // Run data association (Nearest neighbor)
         dataAssociation(predicted_landmarks, observations);
-
-        // Update
+        
+        // Update weights
         double w = 1;
+        
         for(LandmarkObs obs : observations)
         {
+            // Get predicted observation
             const LandmarkObs& predicted_obs = predicted_landmarks[obs.id];
             
-            const double delta_x = obs.x - predicted_obs.x;
-            const double delta_y = obs.y - predicted_obs.y;
+            // Update gaussian distribution
+            const double delta_x_sq = pow(obs.x - predicted_obs.x, 2.0);
+            const double delta_y_sq = pow(obs.y - predicted_obs.y, 2.0);
+            const double exp1 = exp(-0.5 * ((delta_x_sq * std_x) + (delta_y_sq * std_y)));
             
-            const double exp1 = exp(-0.5 * (pow(delta_x, 2.0) * std_landmark[0] + pow(delta_y, 2.0) * std_landmark[1]));
-            const double exp2 = sqrt(2.0 * M_PI * std_landmark[0] * std_landmark[1]);
+            // Divison by exp2 could be done outside of this loop but remains here for numerical stability
             w *= exp1 / exp2;
         }
         
