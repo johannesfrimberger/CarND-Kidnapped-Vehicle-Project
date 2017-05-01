@@ -5,6 +5,11 @@
  *      Author: Tiffany Huang
  */
 
+#include <random>
+#include <algorithm>
+#include <iostream>
+#include <numeric>
+
 #include "particle_filter.h"
 
 using namespace std;
@@ -22,6 +27,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[])
     normal_distribution<double> dist_x(x, std_x);
     normal_distribution<double> dist_y(y, std_y);
     normal_distribution<double> dist_psi(theta, std_psi);
+    
+    // Create random number generator
+    std::default_random_engine gen;
     
     // Set default value for weight
     const double default_weight = 1.;
@@ -86,6 +94,9 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     const double std_x = std_pos[0];
     const double std_y = std_pos[1];
     const double std_psi = std_pos[2];
+    
+    // Create random number generator
+    std::default_random_engine gen;
     
     for(Particle& p : particles)
     {
@@ -195,6 +206,9 @@ void ParticleFilter::resample()
 {
     // Create discrete distribution
     std::discrete_distribution<int> distribution {weights.begin(), weights.end()};
+    
+    // Create random number generator
+    std::default_random_engine gen;
     
     // Sample new particles from discrete distribution
     std::vector<Particle> new_particles;

@@ -49,7 +49,7 @@ int main() {
 	normal_distribution<double> N_theta_init(0, sigma_pos[2]);
 	normal_distribution<double> N_obs_x(0, sigma_landmark[0]);
 	normal_distribution<double> N_obs_y(0, sigma_landmark[1]);
-	double n_x, n_y, n_theta;
+	double n_x, n_y, n_theta, n_range, n_heading;
 	// Read map data
 	Map map;
 	if (!read_map_data("data/map_data.txt", map)) {
@@ -116,7 +116,7 @@ int main() {
 		pf.resample();
 		
 		// Calculate and output the average weighted error of the particle filter over all time steps so far.
-		const vector<Particle>& particles = pf.getParticles();
+		vector<Particle> particles = pf.particles;
 		int num_particles = particles.size();
 		double highest_weight = 0.0;
 		Particle best_particle;
