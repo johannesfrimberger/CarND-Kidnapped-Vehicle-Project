@@ -18,7 +18,6 @@ class ParticleFilter
 public:
     
     // Constructor
-    // @param M Number of particles
     ParticleFilter():
         num_particles(0),
         is_initialized(false)
